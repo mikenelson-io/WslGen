@@ -1,7 +1,7 @@
 <#
 	===========================================================================
 	WSL multiple distribution image creator module
-  Version - 0.1.0
+
   Original module created by Patrick Wu as PsUWI - github.com/patrick330602/PsUWI
   Modified to:
   - reduce number of random characgters in instance name
@@ -22,7 +22,12 @@
 	business interruption, loss of business information, or other pecuniary loss), even if
 	such person has been advised of the possibility of such damages.
 	===========================================================================
-#>
+
+Version - 0.1.1
+ - Changed URLs to reflect new location for Ubuntu WSL images
+ - Removed Focal build as option (no longer supported)
+ - Revised examples
+  #>
 
 function New-WSLInstance {
   <#
@@ -34,7 +39,7 @@ function New-WSLInstance {
         The name of the distribution. The defualt is "Ubuntu". Currently allowed options are:
         "Ubuntu"
     .PARAMETER Release
-        The Distro release you want to use to create the instance. Example for the Ubuntu distro would be "focal" (v20.04).
+        The Distro release you want to use to create the instance. Example for the Ubuntu distro would be "jammy" (v22.04).
     .PARAMETER Version
         The WSL version you want to use. Default is 2.
     .PARAMETER Force
@@ -64,20 +69,20 @@ function New-WSLInstance {
     .PARAMETER InstanceName
         If included, it will create the distro with the name specified prefixed with "ubuntu-".
     .EXAMPLE
-        New-WSLInstance -Release bionic
-        # Create a Ubuntu Bionic instance on WSL2
+        New-WSLInstance -Release jammy
+        # Create a Ubuntu jammy instance on WSL2
     .EXAMPLE
-        New-WSLInstance -Release xenial -Version 1 -RootOnly
-        # Create an Ubuntu Xenial instance on WSL1 without creating a user account
+        New-WSLInstance -Release noble -Version 1 -RootOnly
+        # Create an Ubuntu noble instance on WSL1 without creating a user account
     .EXAMPLE
         New-WSLInstance -Version 2 -NoUpdate
-        # Create an Ubuntu Focal instance on WSL2 without any update
+        # Create an Ubuntu jammy instance on WSL2 without any update
     .EXAMPLE
-        New-WSLInstance -Release Eoan -Force
-        # Create an Ubuntu Eoan instance on WSL2 and download the WSL tarball even if it already exists
+        New-WSLInstance -Release jammy -Force
+        # Create an Ubuntu jammy instance on WSL2 and download the WSL tarball even if it already exists
     .EXAMPLE
         New-WSLInstance -Version 2 -NoUpdate -InstanceName test
-        # Create an Ubuntu Focal instance on WSL2 without any update that is named "ubuntu-test"
+        # Create an Ubuntu jammy instance on WSL2 without any update that is named "ubuntu-test"
     .NOTES
     The Release tarballs are downloaded to the $HomePath\.wslgen\ folder.
     The created distribution will be located in the $HomePath\.wslgen\ folder in the respective named folder.
@@ -90,7 +95,7 @@ function New-WSLInstance {
     [Parameter(Mandatory = $false)]
     [string]$Distro = 'Ubuntu',
     [Parameter(Mandatory = $false)]
-    [string]$Release = 'focal',
+    [string]$Release = 'jammy',
     [Parameter(Mandatory = $false)]
     [ValidateSet('1', '2')]
     [string]$Version = '2',
@@ -179,7 +184,7 @@ function New-WSLInstance {
       if ( $Force ) {
         Write-IfNotSilent "WSL tarball for $Release($SysArchName) found but -Force switch was passed. Re-downloading new tarball..."
         $download_start_time = Get-Date
-        Invoke-WebRequest -Uri "http://cloud-images.ubuntu.com/$Release/current/$Release-server-cloudimg-$SysArchName-wsl.rootfs.tar.gz" -OutFile "$HomePath\.wslgen\.tarball\$Release-$SysArchName.tar.gz"
+        Invoke-WebRequest -Uri "https://cloud-images.ubuntu.com/wsl/$Release/current/ubuntu-$Release-wsl-$SysArchName-wsl.rootfs.tar.gz" -OutFile "$HomePath\.wslgen\.tarball\$Release-$SysArchName.tar.gz"
 
         Write-IfNotSilent "Download completed. Time taken: $((Get-Date).Subtract($download_start_time).Seconds) second(s)"
       }
@@ -190,9 +195,9 @@ function New-WSLInstance {
     }
     else {
 
-      Write-IfNotSilent "WSL tarball for $Release ($SysArchName) not found. Downloading..."
+      Write-IfNotSilent "WSL tarball for $Release ($SysArchName) found. Downloading..."
       $download_start_time = Get-Date
-      Invoke-WebRequest -Uri "http://cloud-images.ubuntu.com/$Release/current/$Release-server-cloudimg-$SysArchName-wsl.rootfs.tar.gz" -OutFile "$HomePath\.wslgen\.tarball\$Release-$SysArchName.tar.gz"
+      Invoke-WebRequest -Uri "https://cloud-images.ubuntu.com/wsl/$Release/current/ubuntu-$Release-wsl-$SysArchName-wsl.rootfs.tar.gz" -OutFile "$HomePath\.wslgen\.tarball\$Release-$SysArchName.tar.gz"
 
       Write-IfNotSilent "Download completed. Time taken: $((Get-Date).Subtract($download_start_time).Seconds) second(s)"
 
@@ -247,8 +252,8 @@ function New-WSLInstance {
       Write-IfNotSilent "Creating user '$env:USERNAME' for $Distro-$TmpName...."
       wsl.exe -d $Distro-$TmpName /usr/sbin/useradd -m -s "/bin/bash" $env:USERNAME
       wsl.exe -d $Distro-$TmpName passwd -q -d $env:USERNAME
-      wsl.exe -d $Distro-$TmpName echo `"$env:USERNAME ALL=`(ALL`:ALL`) NOPASSWD: ALL`" `| tee -a /etc/sudoers.d/$env:USERNAME `>/dev/null
-      wsl.exe -d $Distro-$TmpName /usr/sbin/usermod -a -G adm, dialout, cdrom, floppy, sudo, audio, dip, video, plugdev, netdev $env:USERNAME
+      #wsl.exe -d $Distro-$TmpName echo `"$env:USERNAME ALL=`(ALL`:ALL`) NOPASSWD: ALL`" `| tee -a /etc/sudoers.d/$env:USERNAME `>/dev/null
+      #wsl.exe -d $Distro-$TmpName /usr/sbin/usermod -a -G adm, dialout, cdrom, floppy, sudo, audio, dip, video, plugdev, netdev $env:USERNAME
     }
 
     if ($AdditionalPPA) {
